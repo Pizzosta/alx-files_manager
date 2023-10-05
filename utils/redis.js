@@ -19,7 +19,10 @@ class RedisClient {
 
   // Check if the connection to Redis is alive
   isAlive() {
-    return this.client.connected;
+    if (this.client.connected) {
+      return true;
+    }
+    return false;
   }
 
   // Get a value from Redis
