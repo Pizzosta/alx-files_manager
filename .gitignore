@@ -3,3 +3,6 @@ __pycache__
 
 #ignore bash script
 git.sh
+
+#test files
+main.js
