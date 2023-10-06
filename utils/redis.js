@@ -1,5 +1,5 @@
-import { createClient } from 'redis';
-import { promisify } from 'util';
+const { createClient } = require('redis');
+const { promisify } = require('util')
 
 // Create the RedisClient class
 class RedisClient {
@@ -19,10 +19,7 @@ class RedisClient {
 
   // Check if the connection to Redis is alive
   isAlive() {
-    if (this.client.connected) {
-      return true;
-    }
-    return false;
+    return this.client.connected
   }
 
   // Get a value from Redis
@@ -34,7 +31,7 @@ class RedisClient {
     } catch (error) {
       console.error(`Error in Redis get operation: ${error.message}`);
       // Handle the error or return a default value if needed
-      throw error; // Re-throw the error to propagate it
+      throw error;
     }
   }
 
@@ -46,7 +43,7 @@ class RedisClient {
     } catch (error) {
       console.error(`Error in Redis set operation: ${error.message}`);
       // Handle the error if needed
-      throw error; // Re-throw the error to propagate it
+      throw error;
     }
   }
 
@@ -58,7 +55,7 @@ class RedisClient {
     } catch (error) {
       console.error(`Error in Redis del operation: ${error.message}`);
       // Handle the error if needed
-      throw error; // Re-throw the error to propagate it
+      throw error;
     }
   }
 }
