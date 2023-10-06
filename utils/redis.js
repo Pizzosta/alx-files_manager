@@ -1,5 +1,5 @@
 const { createClient } = require('redis');
-const { promisify } = require('util')
+const { promisify } = require('util');
 
 // Create the RedisClient class
 class RedisClient {
@@ -19,7 +19,7 @@ class RedisClient {
 
   // Check if the connection to Redis is alive
   isAlive() {
-    return this.client.connected
+    return this.client.connected;
   }
 
   // Get a value from Redis
