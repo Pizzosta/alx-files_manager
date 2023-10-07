@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { ObjectID } from 'mongodb';
+import mime from 'mime-types';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
@@ -261,6 +262,49 @@ class FilesController {
     } catch (error) {
       console.error('Error in putUnpublish:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  static async getFile(request, response) {
+    try {
+      const { id } = request.params;
+      const files = dbClient.db.collection('files');
+      const idObject = new ObjectID(id);
+
+      // Retrieve the file document based on ID
+      const file = await files.findOne({ _id: idObject });
+
+      if (!file) {
+        return response.status(404).json({ error: 'Not found' });
+      }
+
+      // Check if the file is public or if the user is the owner
+      const userId = await FilesController.getUserIdFromToken(request.headers['x-token']);
+      if (!file.isPublic && (!userId || userId !== file.userId.toString())) {
+        return response.status(404).json({ error: 'Not found' });
+      }
+
+      // Check if the type of the file is a folder
+      if (file.type === 'folder') {
+        return response.status(400).json({ error: "A folder doesn't have content" });
+      }
+
+      // Determine the file name and size (if specified)
+      let fileName = file.localPath;
+      const { size } = request.query;
+      if (size) {
+        fileName = `${file.localPath}_${size}`;
+      }
+
+      // Read the file content and set the appropriate headers
+      const data = await fs.promises.readFile(fileName);
+      const contentType = mime.contentType(file.name);
+
+      response.setHeader('Content-Type', contentType || 'application/octet-stream');
+      response.status(200).send(data);
+    } catch (error) {
+      console.error('Error in getFile:', error);
+      return response.status(500).json({ error: 'Internal Server Error' });
     }
   }
 }
