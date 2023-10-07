@@ -15,7 +15,13 @@ class AuthController {
       }
 
       const base64Credentials = authHeader.split(' ')[1];
-      const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+      let credentials;
+      try {
+        credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid Base64 content' });
+      }
+
       const [email, password] = credentials.split(':');
       const hashedPassword = createHash('sha1').update(password).digest('hex');
 
