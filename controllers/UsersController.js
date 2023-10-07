@@ -1,5 +1,7 @@
 import sha1 from 'sha1';
+import { ObjectID } from 'mongodb';
 import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 const db = dbClient.client.db(); // Get the MongoDB database instance
 
@@ -44,6 +46,31 @@ class UsersController {
       return res.status(201).json(createdUser);
     } catch (error) {
       console.error('Error in postNew:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  static async getMe(req, res) {
+    try {
+      const { 'x-token': token } = req.headers;
+      if (!token) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const key = `auth_${token}`;
+      const userId = await redisClient.get(key);
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      return res.status(200).json({ id: user._id, email: user.email });
+    } catch (error) {
+      console.error('Error in getMe:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
