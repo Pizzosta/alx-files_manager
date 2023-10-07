@@ -15,9 +15,20 @@ if (!fs.existsSync(folderPath)) {
 
 // Helper function to get userId from token
 async function getUserIdFromToken(token) {
-  // Implement this function to retrieve the userId based on the token from Redis
-  const key = `auth_${token}`;
-  return redisClient.get(key);
+  try {
+    // Implement this function to retrieve the userId based on the token from Redis
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+
+    // Check if the userId is valid (e.g., not null or undefined)
+    if (userId) {
+      return userId;
+    }
+    return null; // Invalid token
+  } catch (error) {
+    console.error('Error in getUserIdFromToken:', error);
+    return null; // Error occurred, consider it as an invalid token
+  }
 }
 
 class FilesController {
