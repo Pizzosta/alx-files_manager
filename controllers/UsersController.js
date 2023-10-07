@@ -4,7 +4,7 @@ import Queue from 'bull';
 import dbClient from '../utils/db';
 // import redisClient from '../utils/redis';
 
-const db = dbClient.client.db(); // Get the MongoDB database instance
+//const db = dbClient.client.db(); // Get the MongoDB database instance
 const userQueue = new Queue('userQueue', 'redis://127.0.0.1:6379');
 
 class UsersController {
@@ -24,7 +24,7 @@ class UsersController {
       return;
     }
 
-    const users = db.collection('users');
+    const users = dbClient.db.collection('users');
     users.findOne({ email }, (err, user) => {
       if (user) {
         response.status(400).json({ error: 'Already exist' });
