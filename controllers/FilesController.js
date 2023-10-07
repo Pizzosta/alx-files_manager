@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { ObjectID } from 'mongodb';
 import mime from 'mime-types';
+import Queue from 'bull';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
@@ -92,6 +93,10 @@ class FilesController {
         // Decode and save the file content to localPath
         const decodedData = Buffer.from(data, 'base64');
         fs.writeFileSync(localPath, decodedData);
+
+        // Start background processing to generate thumbnails
+        const fileQueue = new Queue('fileQueue');
+        await fileQueue.add('generateThumbnails', { userId, fileId: filename, localPath });
       }
 
       // Create a new file document in the collection 'files'
@@ -268,7 +273,8 @@ class FilesController {
   static async getFile(request, response) {
     try {
       const { id } = request.params;
-      const files = dbClient.db.collection('files');
+      const { size } = request.query;
+      const files = db.collection('files');
       const idObject = new ObjectID(id);
 
       // Retrieve the file document based on ID
@@ -291,21 +297,35 @@ class FilesController {
 
       // Determine the file name and size (if specified)
       let fileName = file.localPath;
-      const { size } = request.query;
+
       if (size) {
         fileName = `${file.localPath}_${size}`;
       }
 
-      // Read the file content and set the appropriate headers
-      const data = await fs.promises.readFile(fileName);
-      const contentType = mime.contentType(file.name);
+      // Check if the file exists
+      if (!fs.existsSync(fileName)) {
+        return response.status(404).json({ error: 'Not found' });
+      }
 
-      response.setHeader('Content-Type', contentType || 'application/octet-stream');
-      response.status(200).send(data);
+      // Set the appropriate content type based on the file type
+      const contentType = mime.contentType(file.name) || 'application/octet-stream';
+
+      // Stream the file to the response
+      const fileStream = fs.createReadStream(fileName);
+      fileStream.on('open', () => {
+        response.set('Content-Type', contentType);
+        fileStream.pipe(response);
+      });
+
+      fileStream.on('error', (error) => {
+        console.error('Error streaming file:', error);
+        return response.status(500).json({ error: 'Internal Server Error' });
+      });
     } catch (error) {
       console.error('Error in getFile:', error);
       return response.status(500).json({ error: 'Internal Server Error' });
     }
+    return null;
   }
 }
 
