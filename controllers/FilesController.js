@@ -181,6 +181,75 @@ class FilesController {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+
+  static async putPublish(req, res) {
+    try {
+      const { 'x-token': token } = req.headers;
+      const { id } = req.params;
+
+      // Retrieve the user based on the token
+      const userId = await getUserIdFromToken(token);
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Convert the ID string to an ObjectId
+      const fileId = new ObjectID(id);
+
+      // Retrieve the file document based on ID and user
+      const file = await db.collection('files').findOne({ _id: fileId, userId });
+
+      // If no file is found, return a 404 error
+      if (!file) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      // Update the value of isPublic to true
+      await db.collection('files').updateOne({ _id: fileId }, { $set: { isPublic: true } });
+
+      // Return the updated file document with a status code 200
+      return res.status(200).json(file);
+    } catch (error) {
+      console.error('Error in putPublish:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  static async putUnpublish(req, res) {
+    try {
+      const { 'x-token': token } = req.headers;
+      const { id } = req.params;
+
+      // Retrieve the user based on the token
+      const userId = await getUserIdFromToken(token);
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Convert the ID string to an ObjectId
+      const fileId = new ObjectID(id);
+
+      // Retrieve the file document based on ID and user
+      const file = await db.collection('files').findOne({ _id: fileId, userId });
+
+      // If no file is found, return a 404 error
+      if (!file) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      // Update the value of isPublic to false
+      await db.collection('files').updateOne({ _id: fileId }, { $set: { isPublic: false } });
+
+      // Retrieve the updated file document
+      const updatedFile = await db.collection('files').findOne({ _id: fileId });
+
+      // Return the updated file document with a status code 200
+      return res.status(200).json(updatedFile);
+    } catch (error) {
+      console.error('Error in putUnpublish:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 }
 
 module.exports = FilesController;
