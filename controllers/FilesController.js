@@ -24,10 +24,12 @@ async function getUserIdFromToken(token) {
     if (userId) {
       return userId;
     }
-    return null; // Invalid token
+    // User not found, return an error
+    throw new Error('User not found');
   } catch (error) {
     console.error('Error in getUserIdFromToken:', error);
-    return null; // Error occurred, consider it as an invalid token
+    // Handle any errors that occur during token retrieval
+    throw new Error('Token retrieval error');
   }
 }
 
