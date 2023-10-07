@@ -44,3 +44,23 @@ fileQueue.process('generateThumbnails', async (job) => {
     console.error('Error generating thumbnails:', error);
   }
 });
+
+const userQueue = new Queue('userQueue');
+
+userQueue.process('sendWelcomeEmail', async (job) => {
+  const { userId } = job.data;
+
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
+
+  // Retrieve the user based on the userId from the database
+  const user = await db.collection('users').findOne({ _id: userId });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // In a real application, you would send a welcome email here
+  console.log(`Welcome ${user.email}!`);
+});
