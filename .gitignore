@@ -1,8 +1,0 @@
-#ignore python cache files
-__pycache__
-
-#ignore bash script
-git.sh
-
-#test files
-main.js

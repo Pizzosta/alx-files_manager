@@ -2,7 +2,6 @@ import { ObjectID } from 'mongodb';
 import redisClient from './redis';
 import dbClient from './db';
 
-const db = dbClient.client.db(); // Get the MongoDB database instance
 // retrieves authentication token from headers
 async function getAuthToken(request) {
   const token = request.headers['X-token'];
